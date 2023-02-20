@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { ChatHistory } from './ChatHistory'
 import Iconsendvariantoutline from '~icons/mdi/send-variant-outline'
 
@@ -9,6 +9,7 @@ interface messageItem {
   }
   message: string
 }
+
 const getRandomNum = (min: number, max: number) =>
   Math.floor(Math.random() * (max - min + 1)) + min
 
@@ -16,7 +17,7 @@ const userPhotos: string[] = []
 
 export const ChatRoom = () => {
   const socket = new WebSocket('ws://localhost:3000/ws')
-  const [chatHistory, setchatHistory] = useState([])
+  const [chatHistory, setchatHistory] = useState<messageItem[]>([])
   const [message, setmessage] = useState({ text: '' })
   const [username, setUsername] = useState(`Guest${getRandomNum(0, 1000)}`)
   const [imgUrl, setImgUrl] = useState(
@@ -34,7 +35,7 @@ export const ChatRoom = () => {
     console.log('onMessage')
     console.log(msg.data)
     setchatHistory((currentState) => {
-      const prev = [...currentState]
+      const prev: messageItem[] = [...currentState]
       prev.push({
         user: {
           id: 2,
@@ -61,8 +62,8 @@ export const ChatRoom = () => {
     sendMsg(JSON.stringify({ username, text: message.text }))
     setmessage({ ...message, text: '' })
   }
-  const onKeyDown = (e) => {
-    if (e.key == 'Enter') {
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
       sendMsg(JSON.stringify({ username, text: message.text }))
       setmessage({ ...message, text: '' })
     }
@@ -94,10 +95,8 @@ export const ChatRoom = () => {
           <input
             className=" border border-gray-400 outline-none w-1/2 px-2"
             placeholder="說些什麼吧～"
-            onChange={(e: any) => {
-              if (e.target.value) {
-                setmessage({ ...message, text: e.target.value })
-              }
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              setmessage({ ...message, text: e.target.value })
             }}
             value={message.text}
             onKeyDown={(e) => { onKeyDown(e) }}
