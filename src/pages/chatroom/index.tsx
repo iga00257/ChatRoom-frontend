@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { ChatHistory } from './ChatHistory'
+import { useState } from 'react'
+import ChatMessage from './ChatHistory'
 import Iconsendvariantoutline from '~icons/mdi/send-variant-outline'
 
 interface messageItem {
@@ -14,19 +14,16 @@ const getRandomNum = (min: number, max: number) =>
   Math.floor(Math.random() * (max - min + 1)) + min
 
 const userPhotos: string[] = []
+// const socket = new WebSocket('ws://localhost:3000/ws')
+const socket = new WebSocket('ws://chatroombackend.zeabur.app/ws')
 
 export const ChatRoom = () => {
-  const socket = new WebSocket('ws://localhost:3000/ws')
   const [chatHistory, setchatHistory] = useState<messageItem[]>([])
   const [message, setmessage] = useState({ text: '' })
   const [username, setUsername] = useState(`Guest${getRandomNum(0, 1000)}`)
   const [imgUrl, setImgUrl] = useState(
     userPhotos[getRandomNum(0, userPhotos.length)]
   )
-
-  useEffect(() => {
-    console.log(chatHistory)
-  }, [chatHistory])
 
   socket.onopen = () => {
     console.log('Successfully Connected')
@@ -70,27 +67,23 @@ export const ChatRoom = () => {
   }
   return (
     <>
-      <div className="flex h-14 w-full items-center justify-between border-b bg-white px-6">
-        <div>All issues</div>
-        <div>View Switch</div>
-      </div>
       <section className="borderflex flex-col w-[500px] h-[80vh] py-1">
         <div className="  h-1/8 flex justify-start items-center px-2 py-2 bg-primary text-base">
           {' '}
           Go-Chat 匿名聊天室
         </div>
         <div className="  h-full bg-white overflow-y-scroll">
-          <div className=" flex flex-col px-2">
-            {chatHistory.map((item: messageItem, index: number) => (
-              <ChatHistory
-                key={index}
-                user={item.user}
-                message={item.message}
-                imgUrl={imgUrl}
-              />
-            ))}
-          </div>
-        </div>
+    <div className=" flex flex-col px-2">
+      {chatHistory.map((item: messageItem, index: number) => (
+        <ChatMessage
+          key={index}
+          user={item.user}
+          message={item.message}
+          imgUrl={imgUrl}
+        />
+      ))}
+    </div>
+  </div>
         <div className=" h-1/8 flex justify-between items-center text-gray-500 bg-primary px-5 text-sm">
           <input
             className=" border border-gray-400 outline-none w-1/2 px-2"

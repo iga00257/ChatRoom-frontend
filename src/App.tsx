@@ -10,7 +10,7 @@ function App () {
         <div className="h-full w-64 bg-zinc-50/50">
           <SideMenu />
         </div>
-        <div className="h-full grow bg-zinc-50 border">
+        <div className="h-full grow bg-zinc-50 border flex justify-center py-10">
             <p className="mx-4 text-center text-xs opacity-60">
                <ChatRoom />
             </p>
