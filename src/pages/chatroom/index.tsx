@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import ChatMessage from './ChatHistory'
 import Iconsendvariantoutline from '~icons/mdi/send-variant-outline'
 
@@ -13,55 +13,54 @@ interface messageItem {
 const getRandomNum = (min: number, max: number) =>
   Math.floor(Math.random() * (max - min + 1)) + min
 
-const userPhotos: string[] = []
-// const socket = new WebSocket('ws://localhost:3000/ws')
-const socket = new WebSocket('ws://chatroombackend.zeabur.app/ws')
-
 export const ChatRoom = () => {
   const [chatHistory, setchatHistory] = useState<messageItem[]>([])
   const [message, setmessage] = useState({ text: '' })
   const [username, setUsername] = useState(`Guest${getRandomNum(0, 1000)}`)
-  const [imgUrl, setImgUrl] = useState(
-    userPhotos[getRandomNum(0, userPhotos.length)]
-  )
+  const socket = new WebSocket('ws://localhost:3000/ws')
 
-  socket.onopen = () => {
-    console.log('Successfully Connected')
-  }
-  socket.onmessage = (msg) => {
-    console.log('onMessage')
-    console.log(msg.data)
-    setchatHistory((currentState) => {
-      const prev: messageItem[] = [...currentState]
-      prev.push({
-        user: {
-          id: 2,
-          name: username
-        },
-        message: JSON.parse(msg.data).text
+  useEffect(() => {
+    socket.onopen = () => {
+      console.log('Successfully Connected')
+    }
+    socket.onmessage = (msg) => {
+      console.log(msg.data)
+      setchatHistory((currentState) => {
+        const prev: messageItem[] = [...currentState]
+        prev.push({
+          user: {
+            id: 2,
+            name: JSON.parse(msg.data).username
+          },
+          message: JSON.parse(msg.data).text
+        })
+        return prev
       })
-      return prev
-    })
-  }
+    }
+    socket.onclose = (event) => {
+      console.log('Socket Closed Connection: ', event)
+    }
 
-  socket.onclose = (event) => {
-    console.log('Socket Closed Connection: ', event)
-  }
+    socket.onerror = (error) => {
+      console.log('Socket Error: ', error)
+    }
+    return () => {
+      console.log(socket)
+      console.log('component unmount')
+      if (socket.readyState === 1) { // <-- This is important
+        socket.close()
+      }
+      console.log('close connection')
+    }
+  }, [])
 
-  socket.onerror = (error) => {
-    console.log('Socket Error: ', error)
-  }
-
-  const sendMsg = (msg: string) => {
-    socket.send(msg)
-  }
   const textBoxOnSend = () => {
-    sendMsg(JSON.stringify({ username, text: message.text }))
+    socket.send(JSON.stringify({ username, text: message.text }))
     setmessage({ ...message, text: '' })
   }
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      sendMsg(JSON.stringify({ username, text: message.text }))
+      socket.send(JSON.stringify({ username, text: message.text }))
       setmessage({ ...message, text: '' })
     }
   }
@@ -79,7 +78,6 @@ export const ChatRoom = () => {
           key={index}
           user={item.user}
           message={item.message}
-          imgUrl={imgUrl}
         />
       ))}
     </div>
@@ -92,7 +90,7 @@ export const ChatRoom = () => {
               setmessage({ ...message, text: e.target.value })
             }}
             value={message.text}
-            onKeyDown={(e) => { onKeyDown(e) }}
+            onKeyUp={(e) => { onKeyDown(e) }}
           />
           <button
             className="  border h-full w-4 justify-center"
